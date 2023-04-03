@@ -5,9 +5,9 @@ class PostsController < ApplicationController
     @posts = Post.all
 
     q = params.dig(:search, :q)
-    return unless q.present?
-
-    @posts = @posts.where("title ILIKE '%#{q}' OR html_body ILIKE '%#{q}%'")
+    if q.present?
+      @posts = @posts.where("title ILIKE '%#{q}' OR html_body ILIKE '%#{q}%'")
+    end
   end
 
   def new

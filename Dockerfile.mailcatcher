@@ -1,0 +1,11 @@
+FROM ruby:3.1.2
+
+RUN apt update -qq && \
+  DEBIAN_FRONTEND=noninteractive apt install --no-install-recommends -yqq \
+    libsqlite3-dev && \
+  gem install -v 0.8.1 mailcatcher
+
+EXPOSE 1080
+EXPOSE 1025
+
+CMD mailcatcher -f --ip 0.0.0.0

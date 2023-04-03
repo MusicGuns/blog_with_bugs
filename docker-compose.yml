@@ -1,0 +1,58 @@
+version: '3.6'
+
+x-common-environment: &common-environment
+  DATABASE_URL: postgresql://postgres:blogpassword@db/blog_dev
+  TEST_DATABASE_URL: postgresql://postgres:blogpassword@db/blog_test
+  SMTP_HOST: smtp
+  SMTP_PORT: 1025
+  EDITOR: nano
+  RAILS_LOG_TO_STDOUT: 'true'
+
+services:
+  web:
+    build:
+      context: .
+      target: base
+    environment:
+      <<: *common-environment
+    command: bash -c "bundle exec rails db:create && bundle exec rails db:migrate && bundle exec puma -C config/puma.rb"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/code
+    restart: unless-stopped
+    depends_on:
+      - db
+      - smtp
+
+  webpacker:
+    build:
+      context: .
+      target: base
+    environment:
+      <<: *common-environment
+    command: bash -c "yarn install && ./bin/webpack-dev-server --inline true"
+    ports:
+      - "3035:3035"
+    volumes:
+      - .:/code
+    restart: unless-stopped
+
+  db:
+    image: "postgres:14"
+    restart: always
+    environment:
+      # note: this password is set only once when DB container is started first time
+      POSTGRES_PASSWORD: blogpassword
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./tmp/db_data:/var/lib/postgresql/data
+
+  smtp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mailcatcher
+    restart: unless-stopped
+    ports:
+      - "1080:1080"
+
